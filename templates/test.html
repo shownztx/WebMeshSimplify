@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="../static/libs/three.js"></script>
+    <script type="text/javascript" src="../static/libs/STLLoader.js"></script>
+    <script type="text/javascript" src="../static/libs/stats.js"></script>
+    <script type="text/javascript" src="../static/libs/dat.gui.js"></script>
+    <script type="text/javascript" src="../static/libs/jquery.js"></script>
+</head>
+<body>
+<div id="WebGL-output">
+</div>
+<div id="Stats-output">
+</div>
+
+<script>
+  function init() {
+    const mat = [new THREE.MeshLambertMaterial({color: 0x7777ff}),,
+          new THREE.MeshBasicMaterial({color: 0x000000, wireframe: true})];
+    const stats = initStats();
+      // create a scene, that will hold all our elements such as objects, cameras and lights.
+    const scene = new THREE.Scene();
+      // create a camera, which defines where we're looking at.
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      // create a render and set the size
+    const webGLRenderer = new THREE.WebGLRenderer();
+    webGLRenderer.setClearColor(new THREE.Color(0x000, 1.0));
+    webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+    webGLRenderer.shadowMapEnabled = true;
+
+    // position and point the camera to the center of the scene
+    camera.position.x = 50;
+    camera.position.y = 50;
+    camera.position.z = 0;
+    camera.lookAt(new THREE.Vector3(0, 10, 0));
+
+    // add spotlight for the shadows
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(150, 150, 150);
+    scene.add(spotLight);
+
+    // add the output of the renderer to the html element
+    document.getElementById("WebGL-output").appendChild(webGLRenderer.domElement);
+    // call the render function
+
+    const controls = new function () {
+        this.mesh = "sofa_9";
+        this.seg_factor = 9;
+        this.simp_factor = 0.5;
+        this.simplify = function () {
+            //window.alert("mesh: "+this.mesh+";    seg_factor: "+this.seg_factor+";    simp_factor: "+this.simp_factor);
+            $.ajax({
+                 url: "simplify/", //提价的路径
+                 type: "post",       //提交方式
+                 data: {
+                     //向后台提交的数据
+                     mesh: this.mesh,
+                     seg_factor: this.seg_factor,
+                     simp_factor: this.simp_factor
+                 },
+                 dataType: "JSON",       //规定请求成功后返回的数据
+                 success: function (data) {
+                     //请求成功之后进入该方法，data为成功后返回的数据
+                 },
+                 error: function (errorMsg) {
+                     //请求失败之后进入该方法，errorMsg为失败后返回的错误信息
+                 }
+            });
+        };
+        this.load = function () {
+            file = "../static/models/" + (this.mesh) + "_simp.stl";
+            //window.alert(file)
+            loader.load(file, function (geometry) {
+                group_simp = new THREE.SceneUtils.createMultiMaterialObject(geometry, mat);
+                //group.rotation.x = -0.5 * Math.PI;
+                group_simp.position.x = 0;
+                group_simp.position.y = 0;
+                group_simp.position.z = -10;
+                group_simp.scale.set(16,16,16);
+                scene.add(group_simp);
+            });
+        };
+    };
+    const gui = new dat.GUI();
+    gui.add(controls, 'mesh', ['sofa_9','desk_7','stool_8','toy_8']).onChange(function (e) {
+        scene.remove(group);
+        scene.remove(group_simp);
+        if (e === 'sofa_9'){
+            file = "../static/models/sofa_9.stl";
+            loader.load(file, function (geometry) {
+                geometry.name = "sofa_9";
+                group = new THREE.SceneUtils.createMultiMaterialObject(geometry, mat);
+                //group.rotation.x = -0.5 * Math.PI;
+                group.position.x = 0;
+                group.position.y = 0;
+                group.position.z = 10;
+                group.scale.set(16,16,16);
+                scene.add(group);
+            });
+        }
+        if (e === 'desk_7'){
+            file = "../static/models/desk_7.stl";
+            loader.load(file, function (geometry) {
+                geometry.name = "desk_7";
+                group = new THREE.SceneUtils.createMultiMaterialObject(geometry, mat);
+                //group.rotation.x = -0.5 * Math.PI;
+                group.position.x = 0;
+                group.position.y = 0;
+                group.position.z = 15;
+                group.scale.set(16,16,16);
+                scene.add(group);
+            });
+        }
+        if (e === 'stool_8'){
+            file = "../static/models/stool_8.stl";
+            loader.load(file, function (geometry) {
+                geometry.name = "stool_8";
+                group = new THREE.SceneUtils.createMultiMaterialObject(geometry, mat);
+                //group.rotation.x = -0.5 * Math.PI;
+                group.position.x = 0;
+                group.position.y = 0;
+                group.position.z = 15;
+                group.scale.set(8,8,8);
+                scene.add(group);
+            });
+        }
+        if (e === 'toy_8'){
+            file = "../static/models/toy_8.stl";
+            loader.load(file, function (geometry) {
+                geometry.name = "toy_8";
+                group = new THREE.SceneUtils.createMultiMaterialObject(geometry, mat);
+                //group.rotation.x = -0.5 * Math.PI;
+                group.position.x = 0;
+                group.position.y = 0;
+                group.position.z = 15;
+                group.scale.set(16,16,16);
+                scene.add(group);
+            });
+        }
+    });
+    gui.add(controls, 'seg_factor', 0, 10).step(1);
+    gui.add(controls, 'simp_factor', 0, 1);
+    gui.add(controls, 'simplify');
+    gui.add(controls, 'load');
+
+    var loader = new THREE.STLLoader();
+    var group = new THREE.Object3D();
+    var group_simp = new THREE.Object3D();
+    var file = "../static/models/sofa_9.stl";
+    loader.load(file, function (geometry) {
+      console.log("ztx");
+      console.log(geometry);
+      geometry.name = "sofa_9";
+      //group = new THREE.Mesh(geometry, mat);
+      group = new THREE.SceneUtils.createMultiMaterialObject(geometry, mat);
+      //group.rotation.x = -0.5 * Math.PI;
+      group.position.x = 0;
+      group.position.y = 0;
+      group.position.z = 25;
+      group.scale.set(16,16,16);
+      scene.add(group);
+    });
+
+    render();
+
+    function render() {
+      stats.update();
+      if (group) {
+        group.rotation.y += 0.005;
+      }
+      if(group_simp){
+          group_simp.rotation.y += 0.005;
+      }
+      // render using requestAnimationFrame
+      requestAnimationFrame(render);
+      webGLRenderer.render(scene, camera);
+      webGLRenderer.setSize(window.innerWidth,window.innerHeight)
+    }
+
+    function initStats() {
+      var stats = new Stats();
+      stats.setMode(0); // 0: fps, 1: ms
+      // Align top-left
+      stats.domElement.style.position = 'absolute';
+      stats.domElement.style.left = '0px';
+      stats.domElement.style.top = '0px';
+      document.getElementById("Stats-output").appendChild(stats.domElement);
+      return stats;
+    }
+  }
+  window.onload = init();
+</script>
+
+</body>
+</html>
